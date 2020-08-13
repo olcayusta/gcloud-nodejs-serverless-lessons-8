@@ -1,0 +1,6 @@
+# Project exclude paths
+/cloud-test/node_modules/
+/nodejs-os/node_modules/
+/pg-listen/node_modules/
+/redis-googlecloud-connect/node_modules/
+/socketio-nginx/node_modules/

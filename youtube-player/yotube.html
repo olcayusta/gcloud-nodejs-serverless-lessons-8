@@ -1,0 +1,357 @@
+<!doctype html>
+<html>
+<head>
+	<title>benim html5 player'im</title>
+	<meta charset="utf-8"/>
+	<link rel="stylesheet" href="css/default.css" />
+	<script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+		<script type="text/javascript">
+		$(function(){
+			var video = document.getElementById("exVideo");
+
+			var play = $(".playKontrol");
+			var pause = $(".pauseKontrol");
+
+			$("#exVideo").click(function(){
+
+				if(video.paused == true){
+
+					video.play();
+					play.css("display","none");
+					pause.css("display","block");
+
+				} else {
+
+					video.pause();
+					$(".pauseKontrol").css("display","none");
+					$(".playKontrol").css("display","block");
+
+				}
+
+			})
+
+			$(".playKontrol").click(function(){
+
+				video.play();
+				$(".playKontrol").css("display","none");
+				$(".pauseKontrol").css("display","block");
+
+			});
+
+			$(".pauseKontrol").click(function(){
+
+				video.pause();
+				$(".pauseKontrol").css("display","none");
+				$(".playKontrol").css("display","block");
+
+			});
+
+			$(".stopKontrol").click(function(){
+
+				video.load();
+				$(".pauseKontrol").css("display","none");
+				$(".playKontrol").css("display","block");
+
+			})
+
+			$(video).bind('timeupdate', function(){
+				zaman();
+			});
+
+			$(video).bind("loadedmetadata", function(){
+				zaman2();
+				updateVolume(0, 0.7);
+			});
+
+			function zaman(){
+
+				var curmins = Math.floor(video.currentTime / 60);
+				var cursecs = Math.floor(video.currentTime - curmins * 60);
+
+					if(cursecs < 10){ cursecs = "0"+cursecs; }
+				
+					if(curmins < 10){ curmins = ""+curmins; }
+					
+					$("#currentTime").html(curmins+":"+cursecs);
+			
+			}
+
+			function zaman2() {
+
+				var durmins = Math.floor(video.duration / 60);
+				var dursecs = Math.floor(video.duration - durmins * 60);
+
+					if(durmins < 10){ durmins = ""+durmins; }
+					if(dursecs < 10){ dursecs = "0"+dursecs; }
+
+					$("#durationTime").html(durmins+":"+dursecs);
+
+			}
+
+			function updateVideo( ) {
+
+			    var canvas = document.getElementById( 'canvasVideo' );
+			    var ctx = canvas.getContext( '2d' );
+			    var myVideo = document.getElementById( 'exVideo' );
+			    ctx.drawImage( myVideo, 0, 0, 940, 529 );
+
+			}
+
+			setInterval ( updateVideo, 24 );
+
+			$(video).bind("waiting", function(){
+				$(".videoSpinner").fadeIn();
+			})
+
+			$(video).bind("seeking", function(){
+				$(".videoSpinner").fadeIn();
+			})
+
+			$(video).bind("seeked", function(){
+				$(".videoSpinner").fadeOut();
+			})
+
+
+			$(video).bind("play", function(){
+					$(".videoSpinner").fadeOut();
+			})
+				//Play-Progress-----------------------//
+			$(video).bind('timeupdate', function(){
+				var TPercent = (this.currentTime / this.duration) * 100;
+			$(".play_progres").css({ width: TPercent + '%'});
+			});
+
+				//Load////////////////////
+			$(video).bind('progress', function(){
+				updateLoadProgress();
+			});
+			$(video).bind('loadeddata', function(){
+				updateLoadProgress();
+				$(".videoSpinner").fadeOut();
+;			});
+			$(video).bind('canplaythrough', function(){
+				updateLoadProgress();
+			});
+			$(video).bind('playing', function(){
+				updateLoadProgress();
+				$(".videoSpinner").fadeOut();
+			});
+
+			function updateLoadProgress() {
+				if(video.buffered.length > 0) {
+					var percent = (video.buffered.end(0) / video.duration) * 100;
+					$(".load_progres").css({ width: percent + '%'});
+				}
+			}
+
+				//VIDEO PROGRESS BAR
+				//when video timebar clicked
+				var timeDrag = false;	/* check for drag event */
+				$(".progres").on('mousedown', function(e) {
+					timeDrag = true;
+					updatebar(e.pageX);
+				});
+				$(document).on('mouseup', function(e) {
+					if(timeDrag) {
+						timeDrag = false;
+						updatebar(e.pageX);
+					}
+				})
+				$(document).on('mousemove', function(e) {
+					if(timeDrag) {
+						updatebar(e.pageX);
+					}
+				});
+				var updatebar = function(x) {
+					var progress = $(".progres");
+					
+					//calculate drag position
+					//and update video currenttime
+					//as well as progress bar
+					var maxduration = video.duration;
+					var position = x - progress.offset().left;
+					var percentage = 100 * position / progress.width();
+					if(percentage > 100) {
+						percentage = 100;
+					}
+					if(percentage < 0) {
+						percentage = 0;
+					}
+					$(".play_progres").css('width',percentage+'%');	
+					video.currentTime = maxduration * percentage / 100;
+				};
+
+					function toggleFullScreen() {
+
+						if(video.webkitRequestFullScreen){
+							video.webkitRequestFullScreen();
+
+							if(video.webkitExitFullScreen){
+								video.webkitExitFullScreen();
+							}
+						}
+				}
+
+				// keydown event handler
+				document.addEventListener('keydown', function(e) {
+				  if ( e.keyCode == 13 || e.keyCode == 70) { // F or Enter key
+				    toggleFullScreen();
+				  }
+				   if ( e.keyCode == 32) { // Space key
+				    toggleSpace();
+				  }
+				}, false);
+
+				function toggleSpace() {
+					if(video.paused == true){
+						video.play();
+						play.css("display","none");
+						pause.css("display","block");
+					} else {
+						video.pause();
+						pause.css("display","none");
+						play.css("display","block");
+						
+					}
+				}
+
+				//VOLUME BAR
+				//volume bar event
+				var volumeDrag = false;
+				$('.volume').on('mousedown', function(e) {
+					volumeDrag = true;
+					video[0].muted = false;
+					$('.sound').removeClass('muted');
+					updateVolume(e.pageX);
+				});
+				$(document).on('mouseup', function(e) {
+					if(volumeDrag) {
+						volumeDrag = false;
+						updateVolume(e.pageX);
+					}
+				});
+				$(document).on('mousemove', function(e) {
+					if(volumeDrag) {
+						updateVolume(e.pageX);
+					}
+				});
+				var updateVolume = function(x, vol) {
+					var volume = $('.volume');
+					var percentage;
+					//if only volume have specificed
+					//then direct update volume
+					if(vol) {
+						percentage = vol * 100;
+					}
+					else {
+						var position = x - volume.offset().left;
+						percentage = 100 * position / volume.width();
+					}
+					
+					if(percentage > 100) {
+						percentage = 100;
+					}
+					if(percentage < 0) {
+						percentage = 0;
+					}
+		
+				//update volume bar and video volume
+				$('.volumeBar').css('width',percentage+'%');	
+				video.volume = percentage / 100;
+				
+				//change sound icon based on volume
+				if(video.volume == 0){
+					$('.sound').removeClass('sound2').addClass('muted');
+				}
+				else if(video.volume > 0.5){
+					$('.sound').removeClass('muted').addClass('sound2');
+				}
+				else{
+					$('.sound').removeClass('muted').removeClass('sound2');
+				}
+				
+			};
+		});
+
+			
+
+			
+			
+			
+	</script>
+</head>
+<body>
+
+	<div class="videoKapsayici">	
+
+		<video id="exVideo" preload="auto">
+			<source src="vidyo/mickey.mp4"  type="video/mp4" />
+			 <track id="track" kind="subtitles" label="English subtitles" src="track/track.vtt" srclang="en" default/></track>
+			 your browser not track
+		</video>
+		
+
+
+		<div class="logo">
+			<img src="http://forum.iyinet.com/avatarlar/avatar65370_1.gif" width="75px" height="75px" />
+		</div>
+
+		<div class="videoSpinner">
+			yükleniyor
+		</div>
+	
+		<div class="videoKontrol">
+
+			<div class="playKontrol" title="Oynat">
+				<div class="playInner"></div>
+			</div>
+
+			<div class="pauseKontrol" title="Duraklat">
+				<div class="pauseInner"></div>
+				<div class="pauseInner"></div>
+			</div>
+
+			<div class="stopKontrol">
+				<div class="stopInner"></div>
+			</div>
+
+			<div class="timerKontrol">	
+				<div class="timerInner"><span id="currentTime">0:00</span> <span style="color:#757575"> /</span> <span id="durationTime"></span></div>
+			</div>
+
+			<div class="bosluk" style="width:523px;">
+			</div>
+
+			<div class="volumeKontrol">
+				<div class="mute">
+					<div class="sesInner is"></div>
+					<div class="sesInner is"></div>
+					<div class="sesInner is"></div>
+					<div class="sesInner is"></div>
+					<div class="sesInner is"></div>
+					<div class="sesInner is"></div>
+					<div class="sesInner is"></div>
+				</div>
+				<div class="volume">
+					<div class="volumeBar"></div>
+				</div>
+			</div>
+
+		<div class="progresKontrol">
+
+			<div class="progres">
+				<div class="load_progres"></div>
+				<div class="play_progres"></div>
+			</div>
+
+		</div>
+		
+		</div>
+	
+
+		</div>
+
+
+
+</body>
+</html>
